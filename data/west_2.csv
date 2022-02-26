@@ -1,9 +1,9 @@
 ,team_name,seed,effective_seed,region,round
-0,"['texas_southern', 'gonzaga']",1,1,west,2
-0,duke,2,2,west,2
-0,texas_tech,3,3,west,2
-0,ohio_state,4,4,west,2
+0,"['texas_southern', 'new_orleans']",16,1,west,2
+0,yale,15,2,west,2
+0,texas_state,14,3,west,2
+0,toledo,13,4,west,2
 0,uconn,5,5,west,2
-0,usc,6,6,west,2
-0,michigan_state,7,7,west,2
-0,colorado_state,8,8,west,2
+0,davidson,11,6,west,2
+0,creighton,10,7,west,2
+0,miami,9,8,west,2

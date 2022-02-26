@@ -6,45 +6,18 @@ import asyncio
 from random import random
 import time
 from itertools import product
-import json
 
 import ipywidgets as widgets
 import warnings
 
+import sys
+
+sys.path.insert(0, "..")
+
+from src.file_util import load_data, save_data, safe_load_yaml  # noqa: E402
+from src.const import NICKNAMES_FILE, REGIONS  # noqa: E402
+
 warnings.filterwarnings("ignore")
-
-regions = ["west", "south", "midwest", "east"]
-
-
-def safe_loads(s):
-    try:
-        return json.loads(s.replace("'", '"'))
-    except json.JSONDecodeError:
-        return s
-
-
-def load_data(region, rnd):
-    if rnd < 5:
-        df = pd.read_csv(f"data/{region}_{rnd}.csv")
-    elif rnd == 5:
-        df = pd.concat([pd.read_csv(f"data/{r}_{rnd}.csv") for r in regions])
-    elif rnd == 6:
-        df = pd.read_csv("data/final.csv")
-    else:
-        df = pd.read_csv("data/champion.csv")
-
-    df = df.set_index("effective_seed")
-    df["team_name"] = df["team_name"].map(lambda x: safe_loads(x))
-    return df
-
-
-def save_data(df, region, rnd):
-    if rnd < 6:
-        df.to_csv(f"data/{region}_{rnd}.csv")
-    elif rnd == 6:
-        df.to_csv("data/final.csv")
-    else:
-        df.to_csv("data/champion.csv")
 
 
 def prettify(s):
@@ -57,14 +30,15 @@ def uglify(s):
     return s.lower().replace(" ", "_")
 
 
-def show_images(teams):
+def show_images(teams, nicknames):
     fig, ax = plt.subplots(1, 2, figsize=(15, 15))
 
     for i, team in enumerate(teams):
         with open(f"imgs/{team}.jpg", "rb") as f:
             image = Image.open(f)
             ax[i].axis("off")
-            ax[i].set_title(prettify(team), size=20)
+            title = prettify(f"{team} {nicknames.get(team)}")
+            ax[i].set_title(title, size=20)
             ax[i].imshow(image)
     plt.axis("off")
     fig.show()
@@ -88,7 +62,7 @@ def get_effective_seed(top_seed, region, rnd):
     if rnd != 4:
         return top_seed.name
 
-    return regions.index(region) + 1
+    return REGIONS.index(region) + 1
 
 
 def process_random(teams):
@@ -111,9 +85,11 @@ def wait_for_change(options, submit):
 
 async def run_round(rnd):
     if rnd < 5:
-        round_regions = regions
+        round_regions = REGIONS
     else:
         round_regions = [None]
+
+    nicknames = safe_load_yaml(NICKNAMES_FILE)
 
     for region in round_regions:
         df = load_data(region, rnd)
@@ -146,7 +122,7 @@ async def run_round(rnd):
 
                 teams = [top_team, bot_team]
 
-                show_images(teams)
+                show_images(teams, nicknames)
                 options, submit = make_buttons(teams)
 
                 choice = await wait_for_change(options, submit)
