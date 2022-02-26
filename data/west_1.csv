@@ -1,0 +1,17 @@
+effective_seed,team_name,seed,region,round
+1,gonzaga,1,west,1
+2,duke,2,west,1
+3,texas_tech,3,west,1
+4,ohio_state,4,west,1
+5,uconn,5,west,1
+6,usc,6,west,1
+7,michigan_state,7,west,1
+8,colorado_state,8,west,1
+9,miami,9,west,1
+10,creighton,10,west,1
+11,davidson,11,west,1
+12,iona,12,west,1
+13,toledo,13,west,1
+14,texas_state,14,west,1
+15,yale,15,west,1
+16,"['texas_southern', 'new_orleans']",16,west,1
