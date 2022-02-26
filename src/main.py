@@ -15,7 +15,7 @@ import sys
 sys.path.insert(0, "..")
 
 from src.file_util import load_data, save_data, safe_load_yaml  # noqa: E402
-from src.const import NICKNAMES_FILE, REGIONS  # noqa: E402
+from src.const import NICKNAMES_FILE, REGIONS, IMGS_DIR  # noqa: E402
 
 warnings.filterwarnings("ignore")
 
@@ -34,7 +34,7 @@ def show_images(teams, nicknames):
     fig, ax = plt.subplots(1, 2, figsize=(15, 15))
 
     for i, team in enumerate(teams):
-        with open(f"imgs/{team}.jpg", "rb") as f:
+        with open(f"{IMGS_DIR}/{team}.jpg", "rb") as f:
             image = Image.open(f)
             ax[i].axis("off")
             title = prettify(f"{team} {nicknames.get(team)}")
