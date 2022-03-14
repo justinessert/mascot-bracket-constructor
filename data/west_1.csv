@@ -2,16 +2,16 @@ effective_seed,team_name,seed,region,round
 1,gonzaga,1,west,1
 2,duke,2,west,1
 3,texas_tech,3,west,1
-4,ohio_state,4,west,1
+4,arkansas,4,west,1
 5,uconn,5,west,1
-6,usc,6,west,1
+6,alabama,6,west,1
 7,michigan_state,7,west,1
-8,colorado_state,8,west,1
-9,miami,9,west,1
-10,creighton,10,west,1
-11,davidson,11,west,1
-12,iona,12,west,1
-13,toledo,13,west,1
-14,texas_state,14,west,1
-15,yale,15,west,1
-16,"['texas_southern', 'new_orleans']",16,west,1
+8,boise_state,8,west,1
+9,memphis,9,west,1
+10,davidson,10,west,1
+11,"['rutgers', 'notre_dame']",11,west,1
+12,new_mexico_state,12,west,1
+13,vermont,13,west,1
+14,montana_state,14,west,1
+15,csu_fullerton,15,west,1
+16,georgia_state,16,west,1
