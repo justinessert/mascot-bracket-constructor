@@ -1,9 +1,9 @@
 ,team_name,seed,effective_seed,region,round
-0,kansas,1,1,midwest,2
+0,"['texas_southern', 'kansas']",1,1,midwest,2
 0,jacksonville_state,15,2,midwest,2
 0,wisconsin,3,3,midwest,2
 0,south_dakota_state,13,4,midwest,2
 0,richmond,12,5,midwest,2
-0,iowa_state,11,6,midwest,2
+0,lsu,6,6,midwest,2
 0,miami,10,7,midwest,2
 0,creighton,9,8,midwest,2
