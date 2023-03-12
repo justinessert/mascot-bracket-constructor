@@ -1,3 +1,4 @@
+import os
 import yaml
 import pandas as pd
 import json
@@ -23,25 +24,30 @@ def safe_loads(s):
         return s
 
 
-def load_data(region, rnd):
+def load_data(region, rnd, year="2023"):
     if rnd < 5:
-        df = pd.read_csv(f"{DATA_DIR}/{region}_{rnd}.csv")
+        df = pd.read_csv(os.path.join(DATA_DIR, year, f"{region}_{rnd}.csv"))
     elif rnd == 5:
-        df = pd.concat([pd.read_csv(f"{DATA_DIR}/{r}_{rnd}.csv") for r in REGIONS])
+        df = pd.concat(
+            [
+                pd.read_csv(os.path.join(DATA_DIR, year, f"{r}_{rnd}.csv"))
+                for r in REGIONS
+            ]
+        )
     elif rnd == 6:
-        df = pd.read_csv(f"{DATA_DIR}/final.csv")
+        df = pd.read_csv(os.path.join(DATA_DIR, year, "final.csv"))
     else:
-        df = pd.read_csv(f"{DATA_DIR}/champion.csv")
+        df = pd.read_csv(os.path.join(DATA_DIR, year, "champion.csv"))
 
     df = df.set_index("effective_seed")
     df["team_name"] = df["team_name"].map(lambda x: safe_loads(x))
     return df
 
 
-def save_data(df, region, rnd):
+def save_data(df, region, rnd, year="2023"):
     if rnd < 6:
-        df.to_csv(f"{DATA_DIR}/{region}_{rnd}.csv")
+        df.to_csv(os.path.join(DATA_DIR, year, f"{region}_{rnd}.csv"))
     elif rnd == 6:
-        df.to_csv(f"{DATA_DIR}/final.csv")
+        df.to_csv(os.path.join(DATA_DIR, year, "final.csv"))
     else:
-        df.to_csv(f"{DATA_DIR}/champion.csv")
+        df.to_csv(os.path.join(DATA_DIR, year, "champion.csv"))
