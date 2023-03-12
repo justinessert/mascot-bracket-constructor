@@ -1,0 +1,205 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+  </head>
+  <body>
+    <py-config>
+        packages = ["pandas", "matplotlib", "pyyaml"]
+    </py-config>
+    <py-script>
+        import pandas as pd
+        import json
+        import yaml
+        from PIL import Image
+
+        from itertools import product
+        import matplotlib.pyplot as plt
+        import io
+
+        from pyodide.http import open_url
+        from pyodide.ffi import create_proxy
+
+        GH_URL = "https://raw.githubusercontent.com/justinessert/mascot-bracket-constructor/main/"
+
+        url = f"{GH_URL}data/2023/east_1.csv"
+        rnd1_data = pd.read_csv(open_url(url))
+
+        url = f"{GH_URL}data/nicknames.yml"
+        nicknames = yaml.safe_load(open_url(url).read())
+
+        def get_team_name(data, effective_seed):
+            team = data.loc[data["effective_seed"] == effective_seed, "team_name"].tolist()[0]
+            if "[" in team:
+                team = " / ".join(json.loads(team.replace("'", '"')))
+            
+            team = team.replace("_", " ")
+            return team.title()
+
+        def prettify(s):
+            if isinstance(s, list):
+                s = str(s)
+            return s.upper().replace("_", " ")
+        
+
+        def show_images(teams, nicknames):
+            fig, ax = plt.subplots(1, 2, figsize=(15, 15))
+        
+            for i, team in enumerate(teams):
+                image = Image.fromstring(open_url(f"{GH_URL}imgs/{team}.jpg").read())
+                ax[i].axis("off")
+                title = prettify(f"{team} {nicknames.get(team)}")
+                ax[i].set_title(title, size=20)
+                ax[i].imshow(image)
+            plt.axis("off")
+            fig.show()
+            display(fig, target="graph-area", append=False)
+
+        def show_teams(df, i, rnd):
+            if rnd < 5:
+                max_seed = 2 ** (5 - rnd)
+            elif rnd == 5:
+                max_seed = 4
+            else:
+                max_seed = 2
+            df = df.set_index("effective_seed")
+            top_seed = df.loc[i]
+            bot_seed = df.loc[max_seed + 1 - i]
+
+            top_teams = (
+                top_seed["team_name"]
+                if isinstance(top_seed["team_name"], list)
+                else [top_seed["team_name"]]
+            )
+            bot_teams = (
+                bot_seed["team_name"]
+                if isinstance(bot_seed["team_name"], list)
+                else [bot_seed["team_name"]]
+            )
+
+            winners = []
+            for top_team, bot_team in product(top_teams, bot_teams):
+
+                teams = [top_team, bot_team]
+
+                show_images(teams, nicknames)
+
+        for effective_seed in range(1, 17):
+            team = get_team_name(rnd1_data, effective_seed)
+            pyscript.write(f'rnd1-eSeed{effective_seed}', team)
+        
+        show_teams(rnd1_data, 1, 1)
+            
+    </py-script>
+
+    <div id="graph-area"></div>
+
+    <h1>2013 NCAA Tournament - Midwest Bracket</h1>
+    <main id="tournament">
+      <ul class="round round-1">
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd1-eSeed1'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed16'></span></li>
+    
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd1-eSeed8'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed9'></li>
+    
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd1-eSeed5'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed12'></li>
+    
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top"><span id='rnd1-eSeed4'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed13'></li>
+
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top"><span id='rnd1-eSeed6'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed11'></li>
+
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top"><span id='rnd1-eSeed3'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed14'></li>
+
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top"><span id='rnd1-eSeed7'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed10'></li>
+
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top"><span id='rnd1-eSeed2'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed15'></li>
+    
+        <li class="spacer">&nbsp;</li>
+      </ul>
+      <ul class="round round-2">
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top winner">Lousville <span>82</span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom ">Colo St <span>56</span></li>
+    
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top winner">Oregon <span>74</span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom ">Saint Louis <span>57</span></li>
+    
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top ">Memphis <span>48</span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom winner">Mich St <span>70</span></li>
+    
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top ">Creighton <span>50</span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom winner">Duke <span>66</span></li>
+    
+        <li class="spacer">&nbsp;</li>
+      </ul>
+      <ul class="round round-3">
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top winner">Lousville <span>77</span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom ">Oregon <span>69</span></li>
+    
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top ">Mich St <span>61</span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom winner">Duke <span>71</span></li>
+    
+        <li class="spacer">&nbsp;</li>
+      </ul>
+      <ul class="round round-4">
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top winner">Lousville <span>85</span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom ">Duke <span>63</span></li>
+        
+        <li class="spacer">&nbsp;</li>
+      </ul>   
+    </main>
+
+  </body>
+</html>
