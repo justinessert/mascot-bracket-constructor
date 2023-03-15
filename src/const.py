@@ -7,4 +7,4 @@ IMGS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "imgs"
 )
 NICKNAMES_FILE = os.path.join(DATA_DIR, "nicknames.yml")
-REGIONS = ["east", "south", "midwest", "west"]
+REGIONS = ["south", "midwest", "west", "east"]
