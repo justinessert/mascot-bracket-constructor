@@ -1,95 +1,380 @@
 <html>
   <head>
-    <title>Ice Cream Picker</title>
-    <meta charset="utf-8">
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
     <script defer src="https://pyscript.net/latest/pyscript.js"></script>
   </head>
   <body>
-
-    <py-config type="json">
-      {
-        "packages": [
-            "numpy",
-            "sympy"
-        ],
-        "fetch": [
-            {
-                "files": [
-                    "./main.py"
-                ]
-            }
-        ]
-      }
+    <py-config>
+        packages = ["pandas", "matplotlib", "pyyaml", "requests"]
     </py-config>
-
     <py-script>
-      import js
+      ### IMPORTS ###
+      import asyncio
       import pandas as pd
-      import matplotlib.pyplot as plt
+      import requests
+      import json
+      import yaml
+      from PIL import Image
 
-      from pyodide.http import open_url
+      from itertools import product
+      import matplotlib.pyplot as plt
+      import io
+
+      from pyodide.http import open_url, pyfetch
       from pyodide.ffi import create_proxy
 
-      url = (
-          "https://raw.githubusercontent.com/Cheukting/pyscript-ice-cream/main/bj-products.csv"
-      )
-      ice_data = pd.read_csv(open_url(url))
+      ### GLOBALS ###
 
-      current_selected = []
-      flavour_elements = js.document.getElementsByName("flavour")
+      GH_URL = "https://raw.githubusercontent.com/justinessert/mascot-bracket-constructor/main/"
 
-      def plot(data):
-          plt.rcParams["figure.figsize"] = (22,20)
-          fig, ax = plt.subplots()
-          bars = ax.barh(data["name"], data["rating"], height=0.7)
-          ax.bar_label(bars)
-          plt.title("Rating of ice cream flavours of your choice")
-          display(fig, target="graph-area", append=False)
+      REGIONS = ["west", "south", "midwest", "east"]
+      REGION_ELEMENTS = js.document.getElementsByName("region")
 
-      def select_flavour(event):
-          for ele in flavour_elements:
-              if ele.checked:
-                  current_selected = ele.value
-                  break
-          if current_selected == "ALL":
-              plot(ice_data)
-          else:
-              filter = ice_data.apply(lambda x: ele.value in x["ingredients"], axis=1)
-              plot(ice_data[filter])
+      YEAR = 2023
+      pyscript.write("year", YEAR)
 
-      ele_proxy = create_proxy(select_flavour)
+      curr_winners = []
+      curr_matchups = []
 
-      for ele in flavour_elements:
-          if ele.value == "ALL":
-            ele.checked = True
+      ### HELPER FUNCTIONS - DATA ###
+
+      def get_nicknames():
+        url = f"{GH_URL}data/nicknames.yml"
+        nicknames = yaml.safe_load(open_url(url).read())
+        return nicknames
+
+      def safe_loads(s):
+        try:
+          return json.loads(s.replace("'", '"'))
+        except json.JSONDecodeError:
+          return s
+      
+      def get_region_data(region):
+        url = f"{GH_URL}data/{YEAR}/{region}_1.csv"
+        data = pd.read_csv(open_url(url))
+
+        data["team_name"] = data["team_name"].map(lambda x: safe_loads(x))
+        return data
+      
+      def get_max_seed(rnd):
+        if rnd < 5:
+          max_seed = 2 ** (5 - rnd)
+        elif rnd == 5:
+          max_seed = 4
+        else:
+          max_seed = 2
+        return max_seed
+      
+      def prettify(s):
+        if isinstance(s, list):
+          " / ".join(s)
+        return s.upper().replace("_", " ")
+
+      def get_team_name(data, effective_seed):
+        if data is None:
+          return " "
+        team = data.loc[data["effective_seed"] == effective_seed, "team_name"].tolist()[0]
+        return team
+      
+      def get_picks(rnd, data):
+        max_seed = get_max_seed(rnd)
+        picks = {}
+        for effective_seed in range(1, max_seed + 1):
+          name = f"rnd{rnd}-eSeed{effective_seed}"
+          picks[name] = get_team_name(data, effective_seed)
+        
+        return picks
+      
+      def initialize_regions_dict():
+        regions_dict = {}
+        for region in REGIONS:
+          region_data = get_region_data(region)
+          regions_dict[region] = region_data
+          region_dict = {"current_round": 1, "current_effective_seed": 1, "rounds": {}}
+          for round in range(1, 5):
+            round_data = region_data if round == 1 else None
+            round_dict =  {
+              "data": round_data,
+              "picks": get_picks(round, round_data)
+            }
+            region_dict["rounds"][f"rnd{round}"] = round_dict
+          region_dict["rounds"]["rnd5"] = {"data": None, "picks": {"region-winner": " "}}
+          regions_dict[region] = region_dict
+
+        regions_dict["final_four"] = {
+          "current_round": 1,
+          "current_effective_seed": 1,
+          "rounds": {
+            "rnd5": {"data": None, "picks": get_picks(5, None)},
+            "rnd6": {"data": None, "picks": get_picks(6, None)},
+          },
+        }
+        return regions_dict
+
+      def set_region(region_dict):
+        for round_dict in region_dict["rounds"].values():
+          picks = round_dict["picks"]
+          for pick_name, team in picks.items():
+            pyscript.write(pick_name, prettify(team))
+
+      async def show_images(teams, nicknames):
+        display(teams, target="graph-area2")
+        fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+
+        for i, team in enumerate(teams):
+          url = f"{GH_URL}imgs/{team}.jpg"
+
+          img = await pyfetch(url)
+          res = await img.bytes()
+          iobuf = io.BytesIO(res)
+          image = Image.open(iobuf)
+
+          axes[i].imshow(image)
+          axes[i].axis("off")
+          title = prettify(f"{team} {nicknames.get(team)}")
+          display(title, target="graph-area2")
+          axes[i].set_title(title, size=20)
+
+        plt.tight_layout()
+        display(fig, target="graph-area", append=False)
+
+      ### HELPER FUNCTIONS - USER INPUT ###
+
+      def set_curr_matchups(region_dict):
+        rnd = region_dict["current_round"]
+        effective_seed = region_dict["current_effective_seed"]
+        max_seed = get_max_seed(rnd)
+        
+        df = region_dict["rounds"][f"rnd{rnd}"]["data"]
+
+        df = df.set_index("effective_seed")
+        top_seed = df.loc[effective_seed]
+        bot_seed = df.loc[max_seed + 1 - effective_seed]
+
+        top_teams = (
+          top_seed["team_name"]
+          if isinstance(top_seed["team_name"], list)
+          else [top_seed["team_name"]]
+        )
+        bot_teams = (
+          bot_seed["team_name"]
+          if isinstance(bot_seed["team_name"], list)
+          else [bot_seed["team_name"]]
+        )
+
+        region_dict = list(product(top_teams, bot_teams))
+      
+      def show_teams()
+        teams = curr_matchups[0]
+        for i, team in enumerate(teams):
+          Element(f"team-{i}").write(prettify(team))
+        asyncio.ensure_future(show_images(teams, nicknames))
+        
+      def process_winners_complete(regions_dict):
+        pass
+
+      def process_winner(winner_index, regions_dict):
+        teams = curr_matchups.pop(1)
+        curr_winners.append(teams[winner_index])
+
+        if not curr_matchups:
+          process_winners_complete(regions_dict)
+        else:
+          show_teams()
+
+
+      def select_region(event):
+        for ele in REGION_ELEMENTS:
+          if ele.checked:
             current_selected = ele.value
-          ele.addEventListener("change", ele_proxy)
+            break
+        
+        pyscript.write("region_name", current_selected.capitalize())
+        region_dict = regions_dict[current_selected]
+        set_region(region_dict)
+        
+        curr_matchups = get_matchups(region_dict)
+        show_teams()
 
-      plot(ice_data)
+      ### MAIN ###
 
+      nicknames = get_nicknames()
+      regions_dict = initialize_regions_dict()
+
+      buttons = [
+        js.document.getElementById(f"button-{i}")
+        for i in range(3)
+      ]
+      print(type(buttons[2]))
+      def button_0_event(event):
+        display("Button 0 Clicked", target="graph-area1")
+        Element("button-2").remove_class("hidden")
+        Element("button-1").add_class("hidden")
+      function_proxy = create_proxy(button_0_event)
+      buttons[0].addEventListener("click", function_proxy)
+
+      def button_1_event(event):
+        display("Button 1 Clicked", target="graph-area1")
+      function_proxy = create_proxy(button_1_event)
+      buttons[1].addEventListener("click", function_proxy)
+
+      def button_2_event(event):
+        display("Button 2 Clicked", target="graph-area1")
+      function_proxy = create_proxy(button_2_event)
+      buttons[2].addEventListener("click", function_proxy)
+
+      ele_proxy = create_proxy(select_region)
+
+      for ele in REGION_ELEMENTS:
+        if ele.value == "west":
+          ele.checked = True
+          current_selected = ele.value
+          region_dict = regions_dict["west"]
+          set_region(region_dict)
+          curr_matchups = get_matchups(region_dict)
+          show_teams()
+          pyscript.write("region_name", "West")
+    
+        ele.addEventListener("change", ele_proxy)
+
+
+      winners = []
+            
     </py-script>
 
-    <div id="input" style="margin: 20px;">
-      Select your 🍨 flavour: <br/>
-      <input type="radio" id="all" name="flavour" value="ALL">
-      <label for="all"> All 🍧</label>
-      <input type="radio" id="chocolate" name="flavour" value="COCOA">
-      <label for="chocolate"> Chocolate 🍫</label>
-      <input type="radio" id="cherrie" name="flavour" value="CHERRIES">
-      <label for="cherrie"> Cherries 🍒</label>
-      <input type="radio" id="berries" name="flavour" value="BERRY">
-      <label for="berries"> Berries 🍓</label>
-      <input type="radio" id="cheese" name="flavour" value="CHEESE">
-      <label for="cheese"> Cheese 🧀</label>
-      <input type="radio" id="peanut" name="flavour" value="PEANUT">
-      <label for="peanut"> Peanut 🥜</label>
+    <h1>Select a Region:</h1>
+    <div id="input" style="margin: 20px;"><br/>
+      <input type="radio" id="east" name="region" value="east">
+      <label for="east"> East</label>
+      <input type="radio" id="west" name="region" value="west">
+      <label for="west"> West</label>
+      <input type="radio" id="midwest" name="region" value="midwest">
+      <label for="midwest"> Midwest</label>
+      <input type="radio" id="south" name="region" value="south">
+      <label for="south"> South</label>
     </div>
 
-    <py-repl>
-      ice_data
-    </py-repl>
-
+    <h1>Current Choice: </h1>
+    <button type="button" id="button-0"><span id='team-0'></span></button>
+    <button type="button" id="button-1"><span id='team-1'></span></button>
+    <button type="button" id="button-2" class="hidden">Button 2</button>
+    <div id="graph-area2"></div>
+    <div id="graph-area1"></div>
     <div id="graph-area"></div>
+
+    <h1><span id='year'></span> NCAA Tournament - <span id='region_name'></span> Bracket</h1>
+    <main id="tournament">
+      <ul class="round round-1">
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd1-eSeed1'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed16'></span></li>
+    
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd1-eSeed8'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed9'></li>
+    
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd1-eSeed5'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed12'></li>
+    
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top"><span id='rnd1-eSeed4'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed13'></li>
+
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top"><span id='rnd1-eSeed6'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed11'></li>
+
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top"><span id='rnd1-eSeed3'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed14'></li>
+
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top"><span id='rnd1-eSeed7'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed10'></li>
+
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top"><span id='rnd1-eSeed2'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed15'></li>
+    
+        <li class="spacer">&nbsp;</li>
+      </ul>
+      <ul class="round round-2">
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd2-eSeed1'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd2-eSeed8'></span></li>
+
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd2-eSeed5'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd2-eSeed4'></span></li>
+
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd2-eSeed6'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd2-eSeed3'></span></li>
+
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd2-eSeed2'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd2-eSeed7'></span></li>
+    
+        <li class="spacer">&nbsp;</li>
+      </ul>
+      <ul class="round round-3">
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd3-eSeed1'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd3-eSeed4'></span></li>
+
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd3-eSeed3'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd3-eSeed2'></span></li>
+
+        <li class="spacer">&nbsp;</li>
+      </ul>
+      <ul class="round round-4">
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd4-eSeed1'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd4-eSeed2'></span></li>
+
+        <li class="spacer">&nbsp;</li>
+      </ul>  
+      <ul class="round round-5">
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='region-winner'></span></li>
+        
+        <li class="spacer">&nbsp;</li>
+      </ul>   
+    </main>
+
   </body>
 </html>
