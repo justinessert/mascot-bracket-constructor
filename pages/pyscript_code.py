@@ -59,6 +59,13 @@ def prettify(s):
     return s.upper().replace("_", " ")
 
 
+def clear_choice(msg: str = ""):
+    display(msg, target="graph-area", append=False)
+    Element("buttons").add_class("hidden")
+    Element("team-0").write("")
+    Element("team-1").write("")
+
+
 ### Data Classes
 
 
@@ -117,6 +124,7 @@ class Matchup:
 
         for i, team in enumerate(teams):
             Element(f"team-{i}").write(team.pretty_name_nickname)
+        Element("buttons").remove_class("hidden")
 
         for i, team in enumerate(teams):
             if team.image is None:
@@ -136,17 +144,25 @@ class Matchup:
 
     def set_winner(self, winner_idx):
         matchup = self._possible_matchups.pop(0)
-        self.winners.append(matchup[winner_idx])
+        plt.close()
+        display(
+            f"Selected {matchup[winner_idx].pretty_name_nickname}",
+            target="graph-area",
+            append=False,
+        )
+        if matchup[winner_idx] not in self.winners:
+            self.winners.append(matchup[winner_idx])
 
 
 class Round:
-    def __init__(self, rnd: int, region_name: str, max_seed=None):
+    def __init__(self, rnd: int, region_name: str, final_round: bool = False):
         self.rnd: int = rnd
         self.region_name: str = region_name
 
         self._current_matchup_idx = 1
 
-        self._max_seed: int = max_seed or get_max_seed(self.rnd)
+        self._final_round = final_round
+        self._max_seed: int = 1 if final_round else get_max_seed(self.rnd)
         self._seeds: dict = {i: None for i in range(1, self._max_seed + 1)}
 
         self._max_matchup: int = self._max_seed // 2
@@ -165,13 +181,27 @@ class Round:
 
     @property
     def current_matchup(self) -> Matchup:
+        if self._current_matchup_idx not in self._matchups:
+            display(
+                f"Matchup {self._current_matchup_idx} not found in matchups: {self._matchups}",
+                target="errors",
+                append=False,
+            )
         return self._matchups[self._current_matchup_idx]
+
+    def _set_seed_element(self, effective_seed: int, seed: EffectiveSeed):
+        if not self._final_round:
+            element_name = f"rnd{self.rnd}-eSeed{effective_seed}"
+        elif self.region_name in REGIONS:
+            element_name = "region-winner"
+        else:
+            element_name = "champion"
+        name = seed.pretty_name if seed is not None else " "
+        Element(element_name).write(name)
 
     def set_bracket(self):
         for effective_seed, seed in self._seeds.items():
-            element_name = f"rnd{self.rnd}-eSeed{effective_seed}"
-            name = seed.pretty_name if seed is not None else " "
-            Element(element_name).write(name)
+            self._set_seed_element(effective_seed, seed)
 
     def _validate_seeds(self):
         invalid_seeds = [i for i, seed in self._seeds.items() if seed is None]
@@ -210,16 +240,12 @@ class Round:
 
         self._seeds[effective_seed] = seed
 
-        element_name = f"rnd{self.rnd}-eSeed{effective_seed}"
-        Element(element_name).write(seed.pretty_name)
+        self._set_seed_element(effective_seed, seed)
+
+        if self.is_ready:
+            self._initialize_matchups()
 
     def _initialize_teams(self, seed_data: pd.Series, nicknames: dict) -> List[Team]:
-        team_names = (
-            seed_data["team_name"]
-            if isinstance(seed_data["team_name"], list)
-            else [seed_data["team_name"]]
-        )
-
         if isinstance(seed_data["team_name"], list):
             teams = [
                 Team(
@@ -283,11 +309,15 @@ class Region:
         rnd_nums = list(range(self._min_round, self._max_round + 1))
         self.rounds = {i: Round(rnd=i, region_name=region_name) for i in rnd_nums}
         self.rounds[self._max_round + 1] = Round(
-            rnd=self._max_round + 1, region_name=region_name, max_seed=1
+            rnd=self._max_round + 1, region_name=region_name, final_round=True
         )
 
         if self._initialize_with_data:
             self.rounds[1].initialize_seeds_with_data(nicknames)
+
+    @property
+    def pretty_name(self) -> str:
+        return self.region_name.replace("_", " ").title()
 
     @property
     def current_round(self) -> Round:
@@ -303,7 +333,7 @@ class Region:
 
     @property
     def region_winner(self) -> Optional[List[Team]]:
-        return self.rounds[self._max_round + 1].seeds[1]
+        return self.rounds[self._max_round + 1]._seeds[1].teams
 
     @property
     def is_complete(self):
@@ -327,6 +357,24 @@ class Region:
             and self._current_round_idx != self._max_round
         ):
             self._current_round_idx += 1
+
+        if self.is_complete:
+            clear_choice(f"Completed {self.pretty_name} Region")
+
+    def show_winner(self):
+        clear_choice()
+        n_winners = len(self.region_winner)
+        fig, axes = plt.subplots(1, n_winners, figsize=(5 * n_winners, 5))
+        if n_winners == 1:
+            axes = [axes]
+
+        for i, team in enumerate(self.region_winner):
+            axes[i].imshow(team.image)
+            axes[i].axis("off")
+            axes[i].set_title(team.pretty_name_nickname, size=20)
+
+        plt.tight_layout()
+        display(fig, target="graph-area", append=False)
 
 
 class FinalRegion(Region):
@@ -361,26 +409,48 @@ class State:
 
         self.current_region = None
 
-    def final_region(self):
+    @property
+    def final_region(self) -> Region:
         return self.regions["final_four"]
 
     def set_region(self, region_name):
+        clear_choice()
         self.current_region = self.regions[region_name]
         self.current_region.set_bracket()
-        state.show_choice()
+        self.show_choice()
+        return self.current_region.pretty_name
 
     def show_choice(self):
         if self.current_region.is_complete:
+            if self.current_region == self.final_region:
+                title = f"Your {YEAR} Champion:"
+            else:
+                title = f"{self.current_region.pretty_name} Champion:"
+            Element("section-title").write(title)
+            self.current_region.show_winner()
             return
+
+        if (
+            self.current_region == self.final_region
+            and self.current_region.current_matchup is None
+        ):
+            title = "Please Fill Out Other Regions Prior to the Final Four"
+            Element("section-title").write(title)
+            clear_choice("")
+            return
+
+        title = "Which Mascot is Better?"
+        Element("section-title").write(title)
         asyncio.ensure_future(self.current_region.current_matchup.show())
 
     def set_winner(self, winner_idx: int):
         self.current_region.set_winner(winner_idx)
 
         if self.current_region.is_complete:
-            self.final_region.set_seed(self.current_region)
-        else:
-            self.show_choice()
+            if self.final_region != self.current_region:
+                self.final_region.set_seed(self.current_region)
+
+        self.show_choice()
 
 
 ### Initialization Code ###
@@ -398,18 +468,25 @@ def select_region(event):
             current_selected = ele.value
             break
 
-    Element("region_name").write(current_selected.capitalize())
-    state.set_region(current_selected)
+    if current_selected == "final_four":
+        Element("regions-bracket").add_class("hidden")
+        Element("final-four-bracket").remove_class("hidden")
+    else:
+        Element("final-four-bracket").add_class("hidden")
+        Element("regions-bracket").remove_class("hidden")
+
+    pretty_name = state.set_region(current_selected)
+    Element("region_name").write(pretty_name)
 
 
 ele_proxy = create_proxy(select_region)
 
 for ele in REGION_ELEMENTS:
-    if ele.value == "west":
+    if ele.value == "east":
         ele.checked = True
         current_selected = ele.value
-        state.set_region(current_selected)
-        Element("region_name").write("West")
+        pretty_name = state.set_region(current_selected)
+        Element("region_name").write(pretty_name)
 
     ele.addEventListener("change", ele_proxy)
 
