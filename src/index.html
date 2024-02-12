@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournament Bracket</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        #tournament-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .match-container {
+            display: flex;
+            justify-content: space-between;
+            width: 400px;
+            margin-bottom: 20px;
+        }
+
+        .image-container {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+        }
+
+        .selection-box {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 3px solid #3498db;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .submit-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .result-container {
+            text-align: center;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="tournament-container">
+    <div class="match-container">
+    </div>
+
+    <button class="submit-btn" onclick="submitSelection()">Submit</button>
+
+    <div class="result-container" id="result"></div>
+</div>
+
+<script>
+    let teams = {
+        1: "alabama",
+        2: "wisconsin",
+        3: "vcu",
+        4: "yale",
+        5: "virginia",
+        6: "texas_a&m",
+        7: "tcu",
+        8: "virginia_tech",
+    };
+    let roundLengths = {
+        1: 4,
+        2: 2,
+        3: 1,
+    }
+    let bracket = {
+        1: {
+            1: [1, 8],
+            2: [2, 7],
+            3: [3, 6],
+            4: [4, 5],
+        },
+        2: {
+            1: [],
+            2: [],
+        },
+        3: {
+            1: [],
+        },
+    };
+    let currentRoundIdx = 1;
+    let currentMatchupIdx = 1;
+    let currentSelection = -1;
+
+    function selectWinner(seed) {
+        document.getElementById(`selection${seed}`).style.display = 'block';
+        document.getElementById(`selection${1-seed}`).style.display = 'none';
+        currentSelection = seed;
+    }
+
+    function getNextMatchupIdx() {
+        if (currentRoundIdx === 3) {
+            return -1;
+        }
+        roundLength = roundLengths[currentRoundIdx];
+        if (currentMatchupIdx <= (roundLength / 2)) {
+            return currentMatchupIdx;
+        } else {
+            return roundLength - currentMatchupIdx + 1;
+        }
+    }
+
+    function displayMatchup() {
+        console.log("Displaying Matchup")
+        console.log(currentRoundIdx)
+        console.log(currentMatchupIdx)
+        matchup = bracket[currentRoundIdx][currentMatchupIdx];
+
+        document.querySelector('.match-container').innerHTML = `
+            <div class="image-container" onclick="selectWinner(0)">
+                <img src="../imgs/${teams[matchup[0]]}.jpg" alt="${teams[matchup[0]]}">
+                <div class="selection-box" id="selection0"></div>
+            </div>
+            <div class="image-container" onclick="selectWinner(1)">
+                <img src="../imgs/${teams[matchup[1]]}.jpg" alt="${teams[matchup[1]]}">
+                <div class="selection-box" id="selection1"></div>
+            </div>
+        `;
+    }
+
+    function progressMatchup () {
+        roundLength = roundLengths[currentRoundIdx];
+
+        if (currentMatchupIdx >= roundLength) {
+            currentMatchupIdx = 1;
+            currentRoundIdx++;
+        } else {
+            currentMatchupIdx++;
+        }
+        currentSelection = -1;
+    }
+
+    function submitSelection() {
+        if (currentSelection == -1) {
+            document.getElementById('result').innerText = 'Please select a team before submitting';
+        } else {
+            document.getElementById('result').innerText = '';
+            document.getElementById(`selection0`).style.display = 'none';
+            document.getElementById(`selection1`).style.display = 'none';
+
+            nextMatchupIdx = getNextMatchupIdx();
+            matchup = bracket[currentRoundIdx][currentMatchupIdx];
+            matchupWinner = matchup[currentSelection];
+
+            if (currentRoundIdx === 3) {
+                document.getElementById('result').innerText = 'You have completed the bracket successfully!';
+            } else {
+                nextRoundIdx = currentRoundIdx + 1;
+                bracket[nextRoundIdx][nextMatchupIdx].push(matchupWinner);
+
+                progressMatchup();
+                displayMatchup();
+            }
+        }
+    }
+
+    window.onload = function() {
+        displayMatchup();
+    };
+</script>
+
+</body>
+</html>
