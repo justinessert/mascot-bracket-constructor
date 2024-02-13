@@ -3,22 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
     <title>Tournament Bracket</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
-
         #tournament-container {
             display: flex;
             flex-direction: column;
             align-items: center;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
         }
 
         .match-container {
@@ -69,7 +66,21 @@
     </style>
 </head>
 <body>
-
+<div style="width: 100%">
+    <h1>Select a Region:</h1>
+    <div id="input" style="margin: 20px;"><br/>
+      <input type="radio" id="east" name="region" value="east">
+      <label for="east"> East</label>
+      <input type="radio" id="west" name="region" value="west">
+      <label for="west"> West</label>
+      <input type="radio" id="midwest" name="region" value="midwest">
+      <label for="midwest"> Midwest</label>
+      <input type="radio" id="south" name="region" value="south">
+      <label for="south"> South</label>
+      <input type="radio" id="final_four" name="region" value="final_four">
+      <label for="final_four"> Final Four</label>
+    </div>
+</div>
 <div id="tournament-container">
     <div class="match-container">
     </div>
@@ -77,6 +88,156 @@
     <button class="submit-btn" onclick="submitSelection()">Submit</button>
 
     <div class="result-container" id="result"></div>
+</div>
+
+<div id="regions-bracket">
+    <main id="tournament">
+      <ul class="round round-1">
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd1-eSeed1'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed16'></span></li>
+    
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd1-eSeed8'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed9'></li>
+    
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd1-eSeed5'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed12'></li>
+    
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top"><span id='rnd1-eSeed4'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed13'></li>
+
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top"><span id='rnd1-eSeed6'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed11'></li>
+
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top"><span id='rnd1-eSeed3'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed14'></li>
+
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top"><span id='rnd1-eSeed7'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed10'></li>
+
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top"><span id='rnd1-eSeed2'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed15'></li>
+    
+        <li class="spacer">&nbsp;</li>
+      </ul>
+      <ul class="round round-2">
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd2-eSeed1'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd2-eSeed8'></span></li>
+
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd2-eSeed5'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd2-eSeed4'></span></li>
+
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd2-eSeed6'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd2-eSeed3'></span></li>
+
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top"><span id='rnd2-eSeed7'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd2-eSeed2'></span></li>
+    
+        <li class="spacer">&nbsp;</li>
+      </ul>
+      <ul class="round round-3">
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd3-eSeed1'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd3-eSeed4'></span></li>
+
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd3-eSeed3'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd3-eSeed2'></span></li>
+
+        <li class="spacer">&nbsp;</li>
+      </ul>
+      <ul class="round round-4">
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd4-eSeed1'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd4-eSeed2'></span></li>
+
+        <li class="spacer">&nbsp;</li>
+      </ul>  
+      <ul class="round round-5">
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='region-winner'></span></li>
+        
+        <li class="spacer">&nbsp;</li>
+      </ul>   
+    </main>
+</div>
+
+<div id="final-four-bracket" class="hidden">
+<main id="tournament">
+    <ul class="round round-5">
+    <li class="spacer">&nbsp;</li>
+    
+    <li class="game game-top"><span id='rnd5-eSeed1'></span></li>
+    <li class="game game-spacer">&nbsp;</li>
+    <li class="game game-bottom"><span id='rnd5-eSeed4'></span></li>
+
+    <li class="spacer">&nbsp;</li>
+    
+    <li class="game game-top"><span id='rnd5-eSeed2'></li>
+    <li class="game game-spacer">&nbsp;</li>
+    <li class="game game-bottom"><span id='rnd5-eSeed3'></li>
+
+    <li class="spacer">&nbsp;</li>
+    </ul>
+    <ul class="round round-6">
+    <li class="spacer">&nbsp;</li>
+    
+    <li class="game game-top"><span id='rnd6-eSeed1'></span></li>
+    <li class="game game-spacer">&nbsp;</li>
+    <li class="game game-bottom"><span id='rnd6-eSeed2'></span></li>
+
+    <li class="spacer">&nbsp;</li>
+    </ul>
+    <ul class="round round-7">
+    <li class="spacer">&nbsp;</li>
+    
+    <li class="game game-top"><span id='champion'></span></li>
+    
+    <li class="spacer">&nbsp;</li>
+    </ul>   
+</main>
 </div>
 
 <script>
@@ -89,30 +250,52 @@
         6: "texas_a&m",
         7: "tcu",
         8: "virginia_tech",
+        9: "akron",
+        10: "auburn",
+        11: "boise_state",
+        12: "colgate",
+        13: "fdu",
+        14: "gonzaga",
+        15: "iowa",
+        16: "louisiana",
     };
-    let roundLengths = {
-        1: 4,
-        2: 2,
-        3: 1,
-    }
     let bracket = {
         1: {
-            1: [1, 8],
-            2: [2, 7],
-            3: [3, 6],
-            4: [4, 5],
+            1: [1, 16],
+            2: [2, 15],
+            3: [3, 14],
+            4: [4, 13],
+            5: [5, 12],
+            6: [6, 11],
+            7: [7, 10],
+            8: [8, 9],
         },
         2: {
             1: [],
             2: [],
+            3: [],
+            4: [],
         },
         3: {
             1: [],
+            2: [],
+        },
+        4: {
+            1: [],
         },
     };
+    regionWinner = -1;
     let currentRoundIdx = 1;
     let currentMatchupIdx = 1;
     let currentSelection = -1;
+
+    function maxRound() {
+        return Object.keys(bracket).length
+    }
+
+    function roundLength(roundIdx) {
+        return Object.keys(bracket[roundIdx]).length
+    }
 
     function selectWinner(seed) {
         document.getElementById(`selection${seed}`).style.display = 'block';
@@ -121,14 +304,13 @@
     }
 
     function getNextMatchupIdx() {
-        if (currentRoundIdx === 3) {
+        if (currentRoundIdx === maxRound()) {
             return -1;
         }
-        roundLength = roundLengths[currentRoundIdx];
-        if (currentMatchupIdx <= (roundLength / 2)) {
+        if (currentMatchupIdx <= (roundLength(currentRoundIdx) / 2)) {
             return currentMatchupIdx;
         } else {
-            return roundLength - currentMatchupIdx + 1;
+            return roundLength(currentRoundIdx) - currentMatchupIdx + 1;
         }
     }
 
@@ -150,10 +332,31 @@
         `;
     }
 
-    function progressMatchup () {
-        roundLength = roundLengths[currentRoundIdx];
+    function updateBracket(round, effective_seed, team_id) {
+        console.log(`rnd${round}-eSeed${effective_seed}`)
+        var dynamicTextSpan = document.getElementById(`rnd${round}-eSeed${effective_seed}`);
+        dynamicTextSpan.textContent = `${team_id}. ${teams[team_id]}`;
+    }
 
-        if (currentMatchupIdx >= roundLength) {
+    function initBracket() {
+        for (var roundIdx in bracket) {
+            round = bracket[roundIdx];
+            for (var matchupIdx in round) {
+                matchup = round[matchupIdx];
+                if (matchup.length >= 1) {
+                    effective_seed = matchupIdx;
+                    updateBracket(roundIdx, effective_seed, matchup[0]);
+                }
+                if (matchup.length >= 2) {
+                    effective_seed = roundLength(roundIdx)*2 - matchupIdx + 1;
+                    updateBracket(roundIdx, effective_seed, matchup[1]);
+                }
+            }
+        }
+    }
+
+    function progressMatchup () {
+        if (currentMatchupIdx >= roundLength(currentRoundIdx)) {
             currentMatchupIdx = 1;
             currentRoundIdx++;
         } else {
@@ -174,12 +377,16 @@
             matchup = bracket[currentRoundIdx][currentMatchupIdx];
             matchupWinner = matchup[currentSelection];
 
-            if (currentRoundIdx === 3) {
-                document.getElementById('result').innerText = 'You have completed the bracket successfully!';
+            if (currentRoundIdx === maxRound()) {
+                document.getElementById('result').innerText = 'You have completed the bracket successfully! Scroll down to see the full bracket.';
+                regionWinner = matchupWinner;
+                var dynamicTextSpan = document.getElementById(`region-winner`);
+                dynamicTextSpan.textContent = `${matchupWinner}. ${teams[matchupWinner]}`;
             } else {
                 nextRoundIdx = currentRoundIdx + 1;
                 bracket[nextRoundIdx][nextMatchupIdx].push(matchupWinner);
 
+                updateBracket(nextRoundIdx, currentMatchupIdx, matchupWinner);
                 progressMatchup();
                 displayMatchup();
             }
@@ -188,6 +395,7 @@
 
     window.onload = function() {
         displayMatchup();
+        initBracket();
     };
 </script>
 
