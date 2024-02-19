@@ -6,7 +6,7 @@ import sys
 
 sys.path.insert(0, "..")
 
-from src.const import REGIONS, DATA_DIR  # noqa: E402
+from archive.src.const import REGIONS, DATA_DIR  # noqa: E402
 
 
 def safe_load_yaml(filepath):

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Tournament Bracket</title>
+    <style>
+        #tournament-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .match-container {
+            display: flex;
+            justify-content: space-between;
+            max-width: 90%;
+            margin-bottom: 20px;
+        }
+
+        .image-container {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .image-container img {
+            height: 400px;
+            border-radius: 8px;
+            margin: 20px;
+        }
+
+        .selection-box {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 3px solid #3498db;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .submit-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .result-container {
+            text-align: center;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div style="width: 100%">
+    <h1>Select a Region:</h1>
+    <div id="input" style="margin: 20px;"><br/>
+      <input type="radio" id="east" name="region" value="east" checked onchange="updateRegion('east')">
+      <label for="east"> East</label>
+      <input type="radio" id="west" name="region" value="west" onchange="updateRegion('west')">
+      <label for="west"> West</label>
+      <input type="radio" id="midwest" name="region" value="midwest" onchange="updateRegion('midwest')">
+      <label for="midwest"> Midwest</label>
+      <input type="radio" id="south" name="region" value="south" onchange="updateRegion('south')">
+      <label for="south"> South</label>
+      <input type="radio" id="final_four" name="region" value="final_four" onchange="updateRegion('final_four')">
+      <label for="final_four"> Final Four</label>
+    </div>
+</div>
+<div id="tournament-container">
+    <div class="match-container">
+    </div>
+
+    <button class="submit-btn" onclick="current_region.submitChoice()">Submit</button>
+    <button class="submit-btn" onclick="current_region.selectRandom()">Random</button>
+
+    <div class="result-container" id="result"></div>
+</div>
+
+<div id="regions-bracket">
+    <main id="tournament">
+      <ul class="round round-1">
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd1-eSeed1'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed16'></span></li>
+    
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd1-eSeed8'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed9'></li>
+    
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd1-eSeed5'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed12'></li>
+    
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top"><span id='rnd1-eSeed4'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed13'></li>
+
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top"><span id='rnd1-eSeed6'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed11'></li>
+
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top"><span id='rnd1-eSeed3'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed14'></li>
+
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top"><span id='rnd1-eSeed7'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed10'></li>
+
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top"><span id='rnd1-eSeed2'></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd1-eSeed15'></li>
+    
+        <li class="spacer">&nbsp;</li>
+      </ul>
+      <ul class="round round-2">
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd2-eSeed1'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd2-eSeed8'></span></li>
+
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd2-eSeed5'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd2-eSeed4'></span></li>
+
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd2-eSeed6'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd2-eSeed3'></span></li>
+
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top"><span id='rnd2-eSeed7'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd2-eSeed2'></span></li>
+    
+        <li class="spacer">&nbsp;</li>
+      </ul>
+      <ul class="round round-3">
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd3-eSeed1'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd3-eSeed4'></span></li>
+
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd3-eSeed3'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd3-eSeed2'></span></li>
+
+        <li class="spacer">&nbsp;</li>
+      </ul>
+      <ul class="round round-4">
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='rnd4-eSeed1'></span></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom"><span id='rnd4-eSeed2'></span></li>
+
+        <li class="spacer">&nbsp;</li>
+      </ul>  
+      <ul class="round round-5">
+        <li class="spacer">&nbsp;</li>
+        
+        <li class="game game-top"><span id='region-winner'></span></li>
+        
+        <li class="spacer">&nbsp;</li>
+      </ul>   
+    </main>
+</div>
+
+<div id="final-four-bracket" class="hidden">
+<main id="tournament">
+    <ul class="round round-5">
+    <li class="spacer">&nbsp;</li>
+    
+    <li class="game game-top"><span id='ff-rnd1-eSeed1'></span></li>
+    <li class="game game-spacer">&nbsp;</li>
+    <li class="game game-bottom"><span id='ff-rnd1-eSeed4'></span></li>
+
+    <li class="spacer">&nbsp;</li>
+    
+    <li class="game game-top"><span id='ff-rnd1-eSeed2'></li>
+    <li class="game game-spacer">&nbsp;</li>
+    <li class="game game-bottom"><span id='ff-rnd1-eSeed3'></li>
+
+    <li class="spacer">&nbsp;</li>
+    </ul>
+    <ul class="round round-6">
+    <li class="spacer">&nbsp;</li>
+    
+    <li class="game game-top"><span id='ff-rnd2-eSeed1'></span></li>
+    <li class="game game-spacer">&nbsp;</li>
+    <li class="game game-bottom"><span id='ff-rnd2-eSeed2'></span></li>
+
+    <li class="spacer">&nbsp;</li>
+    </ul>
+    <ul class="round round-7">
+    <li class="spacer">&nbsp;</li>
+    
+    <li class="game game-top"><span id='ff-region-winner'></span></li>
+    
+    <li class="spacer">&nbsp;</li>
+    </ul>   
+</main>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
