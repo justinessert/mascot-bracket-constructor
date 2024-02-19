@@ -14,8 +14,8 @@ import sys
 
 sys.path.insert(0, "..")
 
-from src.file_util import load_data, save_data, safe_load_yaml  # noqa: E402
-from src.const import NICKNAMES_FILE, REGIONS, IMGS_DIR  # noqa: E402
+from archive.src.file_util import load_data, save_data, safe_load_yaml  # noqa: E402
+from archive.src.const import NICKNAMES_FILE, REGIONS, IMGS_DIR  # noqa: E402
 
 warnings.filterwarnings("ignore")
 
