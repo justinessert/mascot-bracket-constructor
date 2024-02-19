@@ -196,6 +196,25 @@ function title(str) {
     return str.replace(/_/g, ' ').replace(/\b\w/g, match => match.toUpperCase());
 }
 
+function delay(milliseconds){
+    return new Promise(resolve => {
+        setTimeout(resolve, milliseconds);
+    });
+}
+
+function generateRandomBinaryList() {
+    const minLength = 10;
+    const maxLength = 20;
+    const randomLength = Math.floor(Math.random() * (maxLength - minLength + 1)) + minLength;
+
+    const binaryList = [];
+    for (let i = 0; i < randomLength; i++) {
+        binaryList.push(i % 2);
+    }
+
+    return binaryList;
+}
+
 class Team {
     constructor(name, seed) {
         this.name = name;
@@ -249,10 +268,13 @@ class Matchup {
     constructor(top_seed, bot_seed) {
         this.top_seed = top_seed;
         this.bot_seed = bot_seed;
-        // TODO: FIX
-        this.possible_matchup_pairs = [
-            new MatchupPair(this.top_seed.teams[0], this.bot_seed.teams[0])
-        ];
+
+        this.possible_matchup_pairs = [];
+        for (let i=0; i<this.top_seed.teams.length; i++) {
+            for (let j=0; j<this.bot_seed.teams.length; j++) {
+                this.possible_matchup_pairs.push(new MatchupPair(this.top_seed.teams[i], this.bot_seed.teams[j]));
+            }
+        }
         this.current_matchup_pair_idx = 0;
         this.winners = [];
     }
@@ -267,10 +289,14 @@ class Matchup {
 
     submitMatchupPair() {
         let winner = this.possible_matchup_pairs[this.current_matchup_pair_idx].current_selection;
+        if (winner === null) {
+            return null;
+        }
         if (!this.winners.includes(winner)) {
             this.winners.push(winner);
         }
         this.current_matchup_pair_idx++;
+        return true;
     }
 
     isComplete() {
@@ -283,7 +309,7 @@ class Matchup {
 }
 
 class Round {
-    constructor(round_number, num_seeds) {
+    constructor(round_number, num_seeds, prefix="") {
         this.round_number = round_number;
         this.num_seeds = num_seeds;
         this.seeds = {};
@@ -293,10 +319,11 @@ class Round {
         this.num_matchups = Math.floor(num_seeds / 2);
         this.matchups = []
         this.current_matchup_idx = null;
+        this.prefix = prefix;
     }
 
     updateHTMLBracket(effective_seed_idx) {
-        var dynamicTextSpan = document.getElementById(`rnd${this.round_number}-eSeed${effective_seed_idx}`);
+        var dynamicTextSpan = document.getElementById(`${this.prefix}rnd${this.round_number}-eSeed${effective_seed_idx}`);
         let effective_seed = this.seeds[effective_seed_idx]
         if (effective_seed == null){
             dynamicTextSpan.textContent = "";
@@ -349,7 +376,10 @@ class Round {
 
     submitMatchup() {
         let matchup = this.matchups[this.current_matchup_idx];
-        matchup.submitMatchupPair();
+        let result = matchup.submitMatchupPair();
+        if (result === null) {
+            return null;
+        }
         if (matchup.isComplete()) {
             this.current_matchup_idx++;
             return matchup.getNextEffectiveSeed();
@@ -378,7 +408,11 @@ class RegionBracket {
         this.rounds = {};
         for (let i = 1; i <= num_rounds; i++) {
             let num_seeds = 2 ** (num_rounds - i + 1);
-            this.rounds[i] = new Round(i, num_seeds);
+            if (region_name == "final_four") {
+                this.rounds[i] = new Round(i, num_seeds, "ff-");
+            } else {
+                this.rounds[i] = new Round(i, num_seeds);
+            }
         }
         this.current_round_idx = 1;
         this.region_winner = null;
@@ -395,7 +429,26 @@ class RegionBracket {
     }
 
     selectWinner(idx) {
+        console.log(idx);
         this.rounds[this.current_round_idx].selectWinner(idx);
+    }
+
+    async selectRandom() {
+        let idxs = generateRandomBinaryList();
+        let mean_wait_time = Math.floor(3000 / idxs.length);
+        // Start with small wait time and gradually increase
+        // Total animation shold be ~2 seconds
+        // Mean wait time is 2 seconds / N
+        // Min wait time is 1/8 * mean wait time
+        // Thefore slope = 14 * mean_wait_time / (8 * N)
+        let min_wait_time = mean_wait_time/8;
+        let slope = 14 * mean_wait_time / (8 * idxs.length);
+
+        for (let i=0; i<idxs.length; i++) {
+            let idx = idxs[i];
+            this.selectWinner(idx);
+            await delay(min_wait_time + (i * slope));
+        }
     }
 
     displayWinner() {
@@ -430,7 +483,11 @@ class RegionBracket {
     setRegionWinner(winner) {
         this.region_winner = winner;
 
-        var dynamicTextSpan = document.getElementById(`region-winner`);
+        if (this.region_name === "final_four") {
+            var dynamicTextSpan = document.getElementById(`ff-region-winner`);
+        } else {
+            var dynamicTextSpan = document.getElementById(`region-winner`);
+        }
         dynamicTextSpan.textContent = this.region_winner.display_name;
 
         if (this.region_name != "final_four") {
