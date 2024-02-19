@@ -192,6 +192,9 @@ region_seeds = {
     "west": 4
 }
 
+const IMAGE_DIRECTORY = "https://raw.githubusercontent.com/justinessert/mascot-bracket-constructor/main/imgs/"
+// const IMAGE_DIRECTORY = "../imgs/"
+
 function title(str) {
     return str.replace(/_/g, ' ').replace(/\b\w/g, match => match.toUpperCase());
 }
@@ -222,7 +225,7 @@ class Team {
         this.seed = seed;
         this.pretty_name = title(`${this.name} ${this.nickname}`);
         this.display_name = `${this.seed}. ${this.pretty_name}`;
-        this.image_path = `../imgs/${this.name}.jpg`;
+        this.image_path = `${IMAGE_DIRECTORY}${this.name}.jpg`;
     }
 }
 
