@@ -18,8 +18,8 @@ bracket_data = {
         "louisiana"
     ],
     "west": [
-        "alabama",
         "wisconsin",
+        "alabama",
         "vcu",
         "yale",
         "virginia",
@@ -36,9 +36,9 @@ bracket_data = {
         ["louisiana", "drake"]
     ],
     "midwest": [
-        "alabama",
-        "wisconsin",
         "vcu",
+        "wisconsin",
+        "alabama",
         "yale",
         "virginia",
         "texas_a&m",
@@ -54,10 +54,10 @@ bracket_data = {
         ["louisiana", "drake"]
     ],
     "south": [
-        "alabama",
+        "yale",
         "wisconsin",
         "vcu",
-        "yale",
+        "alabama",
         "virginia",
         "texas_a&m",
         "tcu",
@@ -185,6 +185,12 @@ nicknames = {
     "nevada": "wolf pack",
     "princeton": "tigers"
 }
+region_seeds = {
+    "midwest": 1,
+    "east": 2,
+    "south": 3,
+    "west": 4
+}
 
 function title(str) {
     return str.replace(/_/g, ' ').replace(/\b\w/g, match => match.toUpperCase());
@@ -218,8 +224,6 @@ class MatchupPair {
     }
     
     display() {
-        console.log("Displaying Matchup")
-        // TODO: FIX SELECTWINNER DEFINITION 
         document.querySelector('.match-container').innerHTML = `
             <div class="image-container" onclick="current_region.selectWinner(0)">
                 <h3>${this.top_team.display_name}</h3>
@@ -302,6 +306,9 @@ class Round {
     }
 
     initializeMatchups(){
+        if (this.matchups.length > 0) {
+            return;
+        }
         for (let i = 1; i <= this.num_matchups; i++) {
             this.matchups.push(new Matchup(this.seeds[i], this.seeds[this.num_seeds - i + 1]));
         }
@@ -319,7 +326,6 @@ class Round {
     }
 
     addSeed(effective_seed, update_html=true) {
-        console.log(`addSeed ${effective_seed}, ${update_html}`)
         this.seeds[effective_seed.effective_seed_idx] = effective_seed;
         if (update_html){
             this.updateHTMLBracket(effective_seed.effective_seed_idx);
@@ -379,7 +385,6 @@ class RegionBracket {
     }
 
     addSeed(effective_seed, update_html=true) {
-        console.log(`(region) addSeed ${effective_seed}, ${update_html}`)
         this.rounds[this.current_round_idx].addSeed(effective_seed, update_html);
     }
 
@@ -394,9 +399,12 @@ class RegionBracket {
     }
 
     displayWinner() {
-        console.log("Display winner")
-        var dynamicTextSpan = document.getElementById(`region-winner`);
-        dynamicTextSpan.textContent = this.region_winner.display_name;
+        if (this.region_name == "final_four") {
+            document.querySelector('.match-container').innerHTML = `<h2>Your overall winner is ${this.region_winner.display_name}!</h2>`;
+
+        } else {
+            document.querySelector('.match-container').innerHTML = `<h2>Your winner of the ${title(this.region_name)} is ${this.region_winner.display_name}!</h2>`;
+        }
         // TODO
     }
 
@@ -410,10 +418,24 @@ class RegionBracket {
     }
 
     displayChoice(){
-        if (!this.isComplete()) {
-            this.rounds[this.current_round_idx].displayMatchup()
-        } else {
+        if (this.isComplete()){
             this.displayWinner()
+        } else if (!this.rounds[this.current_round_idx].isReady()) {
+            document.querySelector('.match-container').innerHTML = `<h2>Please complete other regions first.</h2>`;
+        } else {
+            this.rounds[this.current_round_idx].displayMatchup()
+        }
+    }
+
+    setRegionWinner(winner) {
+        this.region_winner = winner;
+
+        var dynamicTextSpan = document.getElementById(`region-winner`);
+        dynamicTextSpan.textContent = this.region_winner.display_name;
+
+        if (this.region_name != "final_four") {
+            let effective_seed = new EffectiveSeed(region_seeds[this.region_name], winner.teams);
+            brackets["final_four"].addSeed(effective_seed, false)
         }
     }
 
@@ -425,7 +447,7 @@ class RegionBracket {
                 // Add winner to next round
                 this.rounds[this.current_round_idx + 1].addSeed(winner);
             } else {
-                this.region_winner = winner
+                this.setRegionWinner(winner)
             }
         }
         if (current_round.isComplete()) {
@@ -466,7 +488,18 @@ function initialize() {
 
 function updateRegion(region_name) {
     current_region = brackets[region_name];
+    var regions_bracket = document.getElementById('regions-bracket');
+    var final_four_bracket = document.getElementById('final-four-bracket');
+
+    if (region_name == "final_four") {
+        regions_bracket.classList.add("hidden");
+        final_four_bracket.classList.remove("hidden");
+    } else {
+        final_four_bracket.classList.add("hidden");
+        regions_bracket.classList.remove("hidden");
+    }
     current_region.setHTML();
+    current_region.displayChoice();
 }
 
 current_region = null;
@@ -474,5 +507,4 @@ current_region = null;
 window.onload = function() {
     initialize();
     updateRegion("east");
-    current_region.displayChoice();
 };
